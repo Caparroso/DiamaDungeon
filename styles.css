@@ -774,6 +774,23 @@ button {
   z-index: 2;
 }
 
+.modal-close-button {
+  position: absolute;
+  z-index: 12;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255,255,255,0.96);
+  border-radius: 50%;
+  color: #286a7e;
+  background: rgba(255,255,255,0.86);
+  box-shadow: inset 0 1px white, 0 4px 12px rgba(25,101,130,0.18);
+  font-size: 23px;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .brand-orbit {
   width: 86px;
   height: 86px;
@@ -1135,7 +1152,8 @@ button {
   }
 
   .now-playing.collapsed {
-    bottom: 12px;
+    top: 8px;
+    bottom: auto;
     width: min(240px, 58vw);
     grid-template-columns: 38px minmax(0, 1fr);
   }
@@ -1199,12 +1217,37 @@ button {
   }
 
   #hud {
-    top: 5px;
+    top: 4px;
+    left: 8px;
+    right: 8px;
   }
 
   .glass-pill {
-    min-height: 36px;
-    padding: 4px 9px;
+    min-height: 31px;
+    padding: 3px 7px;
+  }
+
+  .hud-cluster {
+    gap: 4px;
+  }
+
+  .hud-label,
+  .room-kicker {
+    font-size: 6px;
+    letter-spacing: 0.8px;
+  }
+
+  .hud-value {
+    font-size: 10px;
+  }
+
+  .room-pill {
+    min-width: 116px;
+  }
+
+  #zone-title {
+    max-width: 135px;
+    font-size: 8px;
   }
 
   #touch-controls {
@@ -1219,13 +1262,13 @@ button {
   }
 
   .action-button {
-    width: 70px;
-    height: 70px;
+    width: 61px;
+    height: 61px;
   }
 
   .interact-button {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
   }
 
   .now-playing {
@@ -1236,7 +1279,8 @@ button {
   }
 
   .now-playing.collapsed {
-    bottom: 10px;
+    top: 7px;
+    bottom: auto;
     width: min(235px, 42vw);
     min-height: 48px;
     padding: 5px 38px 5px 5px;
@@ -1247,20 +1291,68 @@ button {
   }
 
   .credits-window {
-    width: min(720px, 80vw);
-    max-height: 94dvh;
-    padding: 18px 24px;
+    width: min(760px, 96vw);
+    max-height: calc(100dvh - 10px);
+    padding: 10px 14px;
+    overflow-y: auto;
+    border-radius: 22px 22px 28px 28px;
+  }
+
+  .credits-window .modal-kicker {
+    margin-bottom: 2px;
+    font-size: 7px;
+  }
+
+  .credits-window h2 {
+    margin-bottom: 3px;
+    font-size: 18px;
+    line-height: 0.95;
+  }
+
+  .credits-intro,
+  .credits-signoff {
+    display: none;
   }
 
   .credits-list {
-    max-height: 48dvh;
-    grid-template-columns: 1fr 1fr;
-    margin: 8px 0;
+    max-height: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    margin: 5px 0 6px;
+    padding: 3px;
+    overflow: visible;
   }
 
   .credits-list article {
-    min-height: 54px;
-    padding: 7px 10px;
+    min-height: 58px;
+    padding: 5px 6px;
+    border-radius: 10px;
+  }
+
+  .credits-list strong {
+    font-size: 8px;
+  }
+
+  .credits-list span {
+    font-size: 6.5px;
+    line-height: 1.18;
+  }
+
+  .credits-window .primary-button {
+    min-height: 30px;
+    margin-top: 0;
+    padding: 6px 16px;
+    font-size: 9px;
+  }
+
+  .credits-window .modal-close-button {
+    position: sticky;
+    top: 0;
+    float: right;
+    width: 30px;
+    height: 30px;
+    margin: 0 0 -30px;
+    font-size: 20px;
   }
 }
 

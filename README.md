@@ -42,7 +42,8 @@ Los tres discos se encuentran dentro del recorrido principal y la colección
 queda guardada en el navegador. El reproductor permite reproducir, pausar,
 adelantar o retroceder diez segundos, mover la línea de tiempo y cambiar entre
 los discos ya encontrados. En celular, el reproductor se minimiza
-automáticamente a una pestaña pequeña y puede abrirse o cerrarse manualmente.
+automáticamente a una pestaña pequeña en la parte superior y puede abrirse o
+cerrarse manualmente.
 
 ## Fragmentos y créditos
 
@@ -70,6 +71,8 @@ con un fundido cruzado muy breve al reiniciarse. Cuando suena un DIAMA Disc, el
 ambiente se silencia por completo; al pausar o terminar la canción, regresa
 a su nivel normal. Para asegurar este comportamiento en Safari móvil, el audio
 ambiental se pausa físicamente mientras se reproduce cualquier disco.
+Al cambiar de pestaña, bloquear el teléfono o salir de Safari, todos los audios
+se detienen para impedir reproducción en segundo plano.
 
 El exterior del monitor incluye frecuencias y señales DIAMA animadas. En
 teléfonos se usa una cantidad reducida para conservar el rendimiento.

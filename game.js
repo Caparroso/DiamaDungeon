@@ -38,6 +38,7 @@
     playAgainButton: document.getElementById("play-again-button"),
     creditsModal: document.getElementById("credits-modal"),
     creditsCloseButton: document.getElementById("credits-close-button"),
+    creditsXButton: document.getElementById("credits-x-button"),
     nowPlaying: document.getElementById("now-playing"),
     playerToggle: document.getElementById("player-toggle"),
     trackPlay: document.getElementById("track-play"),
@@ -337,6 +338,7 @@
     baseVolume: 0.48,
     suspendedForDisc: false
   };
+  let pageAudioSuspended = document.hidden;
 
   Object.values(discs).forEach((disc) => {
     disc.audio.volume = 0.78;
@@ -461,7 +463,10 @@
   }
 
   async function resumeAmbienceAfterDisc() {
-    if (!ambience.started || discMusicIsPlaying() || !ambience.suspendedForDisc) return;
+    if (pageAudioSuspended
+      || !ambience.started
+      || discMusicIsPlaying()
+      || !ambience.suspendedForDisc) return;
     ambience.suspendedForDisc = false;
     const active = ambience.tracks[ambience.activeIndex];
     ambience.tracks.forEach((track, index) => {
@@ -474,6 +479,34 @@
       ambience.suspendedForDisc = true;
     }
   }
+
+  function suspendAllAudioForPage() {
+    pageAudioSuspended = true;
+    clearTimeout(playerCollapseTimer);
+    Object.values(discs).forEach((disc) => disc.audio.pause());
+    if (!ambience.started) return;
+    ambience.suspendedForDisc = true;
+    ambience.crossfading = false;
+    ambience.crossfadeTime = 0;
+    ambience.tracks.forEach((track) => {
+      track.muted = true;
+      track.volume = 0;
+      track.pause();
+    });
+  }
+
+  function restorePageAudio() {
+    if (document.hidden) return;
+    pageAudioSuspended = false;
+    resumeAmbienceAfterDisc();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) suspendAllAudioForPage();
+    else restorePageAudio();
+  });
+  window.addEventListener("pagehide", suspendAllAudioForPage);
+  window.addEventListener("pageshow", restorePageAudio);
 
   let playerCollapseTimer = null;
   const compactPlayer = window.matchMedia("(max-width: 900px), (max-height: 570px)");
@@ -634,11 +667,14 @@
     game.modalPause = false;
   });
 
-  ui.creditsCloseButton.addEventListener("click", () => {
+  function closeCredits() {
     ui.creditsModal.classList.add("hidden");
     game.modalPause = false;
     showToast("Créditos desbloqueados · gracias por jugar.", 2600);
-  });
+  }
+
+  ui.creditsCloseButton.addEventListener("click", closeCredits);
+  ui.creditsXButton.addEventListener("click", closeCredits);
 
   // ---------------------------
   // Configuración del mapa
