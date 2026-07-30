@@ -55,6 +55,15 @@ button {
     url("assets/images/diamad.webp") center / cover no-repeat;
 }
 
+.aero-background::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  display: none;
+  background: url("assets/images/diamad.webp") center / contain no-repeat;
+  pointer-events: none;
+}
+
 .aero-background::after {
   content: "";
   position: absolute;
@@ -1182,6 +1191,10 @@ button {
 }
 
 @media (max-width: 900px) {
+  .aero-background::before {
+    display: block;
+  }
+
   .aero-background::after,
   .glass-pill,
   .glass-panel,
@@ -1213,7 +1226,11 @@ button {
 
 @media (max-height: 570px) and (orientation: landscape) {
   #game-shell {
-    padding: 44px 74px 8px;
+    padding: 42px 4px 6px;
+  }
+
+  #screen-frame {
+    width: min(60vw, 760px);
   }
 
   #hud {
