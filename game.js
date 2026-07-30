@@ -46,6 +46,7 @@
     trackPrevious: document.getElementById("track-previous"),
     trackNext: document.getElementById("track-next"),
     trackSeek: document.getElementById("track-seek"),
+    playerCollapse: document.getElementById("player-collapse"),
     trackTitle: document.getElementById("track-title"),
     trackStatus: document.getElementById("track-status"),
     trackCurrent: document.getElementById("track-current"),
@@ -334,7 +335,7 @@
     crossfadeTime: 0,
     crossfadeDuration: 0.32,
     baseVolume: 0.48,
-    duckVolume: 0
+    suspendedForDisc: false
   };
 
   Object.values(discs).forEach((disc) => {
@@ -355,6 +356,7 @@
     ambience.started = true;
     const active = ambience.tracks[ambience.activeIndex];
     active.currentTime = 0;
+    active.muted = false;
     active.volume = ambience.baseVolume;
     try {
       await active.play();
@@ -365,7 +367,17 @@
 
   function updateAmbience(dt) {
     if (!ambience.started) return;
-    const targetVolume = discMusicIsPlaying() ? ambience.duckVolume : ambience.baseVolume;
+
+    if (discMusicIsPlaying()) {
+      pauseAmbienceForDisc();
+      return;
+    }
+    if (ambience.suspendedForDisc) {
+      resumeAmbienceAfterDisc();
+      return;
+    }
+
+    const targetVolume = ambience.baseVolume;
     const active = ambience.tracks[ambience.activeIndex];
     const standbyIndex = 1 - ambience.activeIndex;
     const standby = ambience.tracks[standbyIndex];
@@ -432,26 +444,72 @@
     });
   }
 
-  function silenceAmbienceForDisc() {
+  function pauseAmbienceForDisc() {
+    if (!ambience.started) return;
+    if (ambience.crossfading
+      && ambience.crossfadeTime >= ambience.crossfadeDuration / 2) {
+      ambience.activeIndex = 1 - ambience.activeIndex;
+    }
+    ambience.crossfading = false;
+    ambience.crossfadeTime = 0;
+    ambience.suspendedForDisc = true;
     ambience.tracks.forEach((track) => {
+      track.muted = true;
       track.volume = 0;
+      track.pause();
     });
+  }
+
+  async function resumeAmbienceAfterDisc() {
+    if (!ambience.started || discMusicIsPlaying() || !ambience.suspendedForDisc) return;
+    ambience.suspendedForDisc = false;
+    const active = ambience.tracks[ambience.activeIndex];
+    ambience.tracks.forEach((track, index) => {
+      track.muted = false;
+      track.volume = index === ambience.activeIndex ? ambience.baseVolume : 0;
+    });
+    try {
+      await active.play();
+    } catch {
+      ambience.suspendedForDisc = true;
+    }
+  }
+
+  let playerCollapseTimer = null;
+  const compactPlayer = window.matchMedia("(max-width: 900px), (max-height: 570px)");
+
+  function setPlayerCollapsed(collapsed) {
+    ui.nowPlaying.classList.toggle("collapsed", collapsed);
+    ui.playerCollapse.textContent = collapsed ? "⌃" : "⌄";
+    ui.playerCollapse.setAttribute(
+      "aria-label",
+      collapsed ? "Abrir reproductor" : "Minimizar reproductor"
+    );
+  }
+
+  function schedulePlayerCollapse(delay = 4800) {
+    clearTimeout(playerCollapseTimer);
+    if (!compactPlayer.matches) return;
+    playerCollapseTimer = setTimeout(() => setPlayerCollapsed(true), delay);
   }
 
   async function playDisc(discId) {
     const disc = discs[discId];
     if (!disc) return;
 
+    pauseAmbienceForDisc();
     stopOtherTracks(disc.audio);
-    silenceAmbienceForDisc();
     music.currentDisc = disc;
     ui.nowPlaying.classList.remove("hidden");
+    setPlayerCollapsed(false);
+    schedulePlayerCollapse();
     ui.trackTitle.textContent = disc.title;
 
     try {
       await disc.audio.play();
       updatePlayerUi();
     } catch {
+      resumeAmbienceAfterDisc();
       showToast("El navegador bloqueó el audio. Pulsa ▶ para reproducir.");
       updatePlayerUi();
     }
@@ -503,9 +561,19 @@
   Object.values(discs).forEach((disc) => {
     disc.audio.addEventListener("timeupdate", updatePlayerUi);
     disc.audio.addEventListener("loadedmetadata", updatePlayerUi);
-    disc.audio.addEventListener("play", updatePlayerUi);
-    disc.audio.addEventListener("pause", updatePlayerUi);
-    disc.audio.addEventListener("ended", updatePlayerUi);
+    disc.audio.addEventListener("play", () => {
+      pauseAmbienceForDisc();
+      updatePlayerUi();
+    });
+    disc.audio.addEventListener("playing", pauseAmbienceForDisc);
+    disc.audio.addEventListener("pause", () => {
+      updatePlayerUi();
+      setTimeout(resumeAmbienceAfterDisc, 0);
+    });
+    disc.audio.addEventListener("ended", () => {
+      updatePlayerUi();
+      setTimeout(resumeAmbienceAfterDisc, 0);
+    });
   });
 
   ui.playerToggle.addEventListener("click", toggleCurrentTrack);
@@ -520,6 +588,21 @@
     if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
     audio.currentTime = (Number(ui.trackSeek.value) / 1000) * audio.duration;
     updatePlayerUi();
+  });
+  ui.playerCollapse.addEventListener("click", (event) => {
+    event.stopPropagation();
+    clearTimeout(playerCollapseTimer);
+    setPlayerCollapsed(!ui.nowPlaying.classList.contains("collapsed"));
+  });
+  ui.nowPlaying.addEventListener("click", (event) => {
+    if (!ui.nowPlaying.classList.contains("collapsed")) return;
+    if (event.target === ui.playerToggle || event.target === ui.playerCollapse) return;
+    setPlayerCollapsed(false);
+    schedulePlayerCollapse(7000);
+  });
+  ui.nowPlaying.addEventListener("pointerdown", () => clearTimeout(playerCollapseTimer));
+  ui.nowPlaying.addEventListener("pointerup", () => {
+    if (!ui.nowPlaying.classList.contains("collapsed")) schedulePlayerCollapse(7000);
   });
 
   function discoverDisc(disc) {

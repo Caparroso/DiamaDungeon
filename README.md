@@ -41,7 +41,8 @@ No cambies las mayúsculas o rutas dentro de `assets/` sin actualizar
 Los tres discos se encuentran dentro del recorrido principal y la colección
 queda guardada en el navegador. El reproductor permite reproducir, pausar,
 adelantar o retroceder diez segundos, mover la línea de tiempo y cambiar entre
-los discos ya encontrados.
+los discos ya encontrados. En celular, el reproductor se minimiza
+automáticamente a una pestaña pequeña y puede abrirse o cerrarse manualmente.
 
 ## Fragmentos y créditos
 
@@ -67,7 +68,8 @@ fragmentos, las cápsulas de energía y el cofre tienen colisión física.
 `CAPARROSO — DkAmbience (DiamaDungeon)` se reproduce durante todo el recorrido
 con un fundido cruzado muy breve al reiniciarse. Cuando suena un DIAMA Disc, el
 ambiente se silencia por completo; al pausar o terminar la canción, regresa
-gradualmente a su nivel normal.
+a su nivel normal. Para asegurar este comportamiento en Safari móvil, el audio
+ambiental se pausa físicamente mientras se reproduce cualquier disco.
 
 El exterior del monitor incluye frecuencias y señales DIAMA animadas. En
 teléfonos se usa una cantidad reducida para conservar el rendimiento.
