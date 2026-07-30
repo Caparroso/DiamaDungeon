@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#dffcff">
+  <meta name="description" content="DIAMA Dungeon — una aventura Y2K de CAPARROSO.">
+  <title>DIAMA Dungeon — CDMX Quest</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="aero-background" aria-hidden="true">
+    <div class="aero-glow aero-glow-one"></div>
+    <div class="aero-glow aero-glow-two"></div>
+    <div class="aero-bubbles"></div>
+    <div id="signal-field" class="signal-field"></div>
+  </div>
+
+  <main id="game-shell">
+    <header id="hud" aria-label="Estado del juego">
+      <div class="hud-cluster">
+        <div class="glass-pill hud-life">
+          <span class="hud-label">ENERGÍA</span>
+          <span id="hearts" class="hud-value" aria-label="Tres puntos de vida">♥ ♥ ♥</span>
+        </div>
+        <div class="glass-pill">
+          <span class="hud-label">LLAVE</span>
+          <span id="key-count" class="hud-value">◇ 0</span>
+        </div>
+        <div class="glass-pill">
+          <span class="hud-label">DISCOS</span>
+          <span id="disc-count" class="hud-value">◉ 0/3</span>
+        </div>
+        <div class="glass-pill">
+          <span class="hud-label">FRAGMENTOS</span>
+          <span id="fragment-count" class="hud-value">✦ 0/8</span>
+        </div>
+      </div>
+
+      <div class="glass-pill room-pill">
+        <span class="room-kicker">DIAMA NETWORK</span>
+        <span id="zone-title">CUARTO 1 · ENTRADA</span>
+      </div>
+    </header>
+
+    <section id="screen-frame" aria-label="DIAMA Dungeon">
+      <div class="screen-shine" aria-hidden="true"></div>
+      <canvas id="gameCanvas" width="640" height="360">
+        Tu navegador necesita soporte para Canvas.
+      </canvas>
+      <div id="interaction-hint" class="interaction-hint hidden">E · INTERACTUAR</div>
+      <div id="game-toast" role="status" aria-live="polite"></div>
+    </section>
+
+    <aside id="now-playing" class="glass-panel now-playing hidden" aria-live="polite">
+      <button id="player-toggle" class="mini-disc" type="button" aria-label="Reproducir o pausar">▶</button>
+      <div class="track-copy">
+        <span class="track-eyebrow">DIAMA DISC</span>
+        <strong id="track-title">CAPARROSO</strong>
+        <span id="track-status">En pausa</span>
+      </div>
+      <div class="track-time">
+        <span id="track-current">0:00</span>
+        <input id="track-seek" class="progress-track" type="range" min="0" max="1000" value="0" aria-label="Posición de la canción">
+        <span id="track-duration">0:00</span>
+      </div>
+      <div class="player-controls" aria-label="Controles del disco">
+        <button id="track-previous" type="button" aria-label="Disco anterior">│◀</button>
+        <button id="track-back" type="button" aria-label="Retroceder diez segundos">−10</button>
+        <button id="track-play" type="button" aria-label="Reproducir o pausar">▶</button>
+        <button id="track-forward" type="button" aria-label="Adelantar diez segundos">+10</button>
+        <button id="track-next" type="button" aria-label="Siguiente disco">▶│</button>
+      </div>
+    </aside>
+
+    <nav id="touch-controls" aria-label="Controles táctiles">
+      <div id="dpad" class="glass-panel">
+        <button class="control-button dpad-up" data-key="ArrowUp" type="button" aria-label="Arriba">▲</button>
+        <button class="control-button dpad-left" data-key="ArrowLeft" type="button" aria-label="Izquierda">◀</button>
+        <div class="dpad-center" aria-hidden="true"></div>
+        <button class="control-button dpad-right" data-key="ArrowRight" type="button" aria-label="Derecha">▶</button>
+        <button class="control-button dpad-down" data-key="ArrowDown" type="button" aria-label="Abajo">▼</button>
+      </div>
+
+      <div class="action-controls">
+        <button class="action-button attack-button" data-key=" " type="button">
+          <span>A</span><small>ATACAR</small>
+        </button>
+        <button class="action-button interact-button" data-key="e" type="button">
+          <span>B</span><small>ACCIÓN</small>
+        </button>
+      </div>
+    </nav>
+  </main>
+
+  <aside id="rotate-device" aria-label="Gira tu teléfono">
+    <div class="rotate-phone" aria-hidden="true">↻</div>
+    <strong>GIRA TU TELÉFONO</strong>
+    <span>DIAMA Dungeon se juega en horizontal</span>
+  </aside>
+
+  <section id="start-modal" class="modal-layer">
+    <div class="modal-window start-window">
+      <div class="brand-orbit" aria-hidden="true">
+        <div class="brand-core">D.</div>
+      </div>
+      <h1>DIAMA<br><span>DUNGEON</span></h1>
+      <p class="modal-subtitle">SPECIAL EDITION · CDMX QUEST</p>
+
+      <div class="controls-card">
+        <div>
+          <strong>COMPUTADORA</strong>
+          <span>WASD / Flechas · Mover</span>
+          <span>Espacio / Z · Atacar</span>
+          <span>E / X · Interactuar</span>
+        </div>
+        <div>
+          <strong>CELULAR</strong>
+          <span>D-Pad · Mover</span>
+          <span>A · Atacar</span>
+          <span>B · Interactuar</span>
+        </div>
+      </div>
+
+      <button id="start-button" class="primary-button" type="button" disabled>
+        <span id="start-button-text">CARGANDO RECURSOS…</span>
+      </button>
+      <p id="load-status" class="load-status">Preparando DIAMA Games</p>
+    </div>
+  </section>
+
+  <section id="death-modal" class="modal-layer hidden">
+    <div class="modal-window compact-window danger-window">
+      <p class="modal-kicker">SEÑAL DIAMA INTERRUMPIDA</p>
+      <h2>DIAMAPERDIDO XD</h2>
+      <p>Tu progreso está seguro. Volverás al inicio de este cuarto con toda tu energía.</p>
+      <button id="retry-button" class="primary-button danger-button" type="button">CONTINUAR</button>
+    </div>
+  </section>
+
+  <section id="disc-modal" class="modal-layer hidden">
+    <div class="modal-window compact-window disc-window">
+      <div class="large-disc" aria-hidden="true"><span>D.</span></div>
+      <p class="modal-kicker">NUEVO DIAMA DISC ENCONTRADO</p>
+      <h2 id="disc-modal-title">CAPARROSO — READY</h2>
+      <p id="disc-modal-location">ARCHIVO 01/03</p>
+      <button id="disc-play-button" class="primary-button" type="button">REPRODUCIR</button>
+      <button id="disc-close-button" class="secondary-button" type="button">SEGUIR EXPLORANDO</button>
+    </div>
+  </section>
+
+  <section id="reveal-modal" class="modal-layer hidden">
+    <div class="modal-window finale-window">
+      <p class="modal-kicker">DUNGEON CLEAR · POP-UP DESBLOQUEADO</p>
+      <h2>DIAMA × CENIZA<br>POP-UP CDMX</h2>
+      <div class="event-card">
+        <span>PARQUE MÉXICO · CIUDAD DE MÉXICO</span>
+        <strong>7 DE AGOSTO DE 2026</strong>
+        <span>DIAMA × CENIZA</span>
+      </div>
+      <p id="final-disc-message">Discos encontrados: 0/3</p>
+      <button id="play-again-button" class="primary-button" type="button">JUGAR DE NUEVO</button>
+    </div>
+  </section>
+
+  <section id="credits-modal" class="modal-layer hidden">
+    <div class="modal-window credits-window">
+      <p class="modal-kicker">8/8 FRAGMENTOS DIAMA · ARCHIVO COMPLETO</p>
+      <h2>CRÉDITOS Y<br>AGRADECIMIENTOS</h2>
+      <p class="credits-intro">Gracias por conectar todas las frecuencias de DIAMA Dungeon.</p>
+      <div class="credits-list">
+        <article>
+          <strong>Rodrigo Caparroso</strong>
+          <span>Productor musical, compositor, programador y diseñador de DIAMA Dungeon; encargado de Tecnologías de la Información (TI) y del área de Operaciones</span>
+        </article>
+        <article>
+          <strong>Andrés Ortiz Ayala</strong>
+          <span>Administración, gestión comercial y relaciones públicas</span>
+        </article>
+        <article>
+          <strong>Lucio Gálvez Guisande</strong>
+          <span>Arte e identidad</span>
+        </article>
+        <article>
+          <strong>Ricardo Josafat González Piña</strong>
+          <span>Área de comunidad y crecimiento digital</span>
+        </article>
+        <article>
+          <strong>Alejandro Diez Martínez Arauz</strong>
+          <span>Colaborador estratégico en la región de Querétaro</span>
+        </article>
+        <article>
+          <strong>Sergio Serner Neri</strong>
+          <span>Stage manager</span>
+        </article>
+        <article>
+          <strong>Nicolás Alegre Pacheco</strong>
+          <span>Embajador y aliado en la comunidad de Querétaro</span>
+        </article>
+        <article>
+          <strong>Sophia Montiel Valenzuela</strong>
+          <span>Diseñadora de moda y vestuario</span>
+        </article>
+      </div>
+      <p class="credits-signoff">TEAM DIAMA · QUERÉTARO / PACHUCA / CDMX · 2026</p>
+      <button id="credits-close-button" class="primary-button" type="button">SEGUIR EXPLORANDO</button>
+    </div>
+  </section>
+
+  <audio id="audio-ready" preload="metadata" src="assets/audio/ready.mp3"></audio>
+  <audio id="audio-phantoms" preload="metadata" src="assets/audio/phantoms.mp3"></audio>
+  <audio id="audio-dk" preload="metadata" src="assets/audio/dk-y2k.mp3"></audio>
+  <audio id="ambience-a" preload="auto" src="assets/audio/dk-ambience.mp3"></audio>
+  <audio id="ambience-b" preload="auto" src="assets/audio/dk-ambience.mp3"></audio>
+
+  <script src="game.js"></script>
+</body>
+</html>
