@@ -29,7 +29,8 @@ No cambies las mayúsculas o rutas dentro de `assets/` sin actualizar
 - WASD o flechas: mover.
 - Espacio o Z: atacar.
 - E o X: interactuar.
-- En celular: D-Pad, A y B.
+- En celular: joystick táctil, A y B. Apoya el dedo en cualquier parte del
+  joystick y arrástralo; también acepta diagonales.
 
 ## Música
 
@@ -56,6 +57,7 @@ fragmentos, las cápsulas de energía y el cofre tienen colisión física.
 - El jugador tiene tres puntos de energía.
 - La espada tiene alcance amplio y golpea durante toda su animación.
 - Los enemigos detectan al jugador a menor distancia.
+- Los núcleos del cuarto 2 pueden empujarse incluso si aún quedan enemigos.
 - Hay cuatro cápsulas de corazón que restauran un punto.
 - Morir conserva llaves, discos, enemigos derrotados y puzles completados.
 - **Continuar** reaparece al jugador al inicio del cuarto actual.

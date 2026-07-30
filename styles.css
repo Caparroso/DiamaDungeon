@@ -402,25 +402,36 @@ button {
 }
 
 #dpad {
-  width: 132px;
-  height: 94px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  padding: 5px;
-  border-radius: 26px;
+  position: relative;
+  width: 148px;
+  height: 148px;
+  display: block;
+  padding: 7px;
+  overflow: visible;
+  border-radius: 50%;
+  opacity: 0.72;
   pointer-events: auto;
+  touch-action: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+#dpad.joystick-active {
+  opacity: 0.94;
+  transform: scale(1.025);
 }
 
 .control-button {
-  position: relative;
+  position: absolute;
   z-index: 2;
+  width: 42px;
+  height: 42px;
   border: 0;
+  border-radius: 50%;
   color: #35758a;
-  background: rgba(255,255,255,0.44);
-  font-size: 14px;
+  background: rgba(255,255,255,0.26);
+  font-size: 17px;
   font-weight: 900;
-  cursor: pointer;
+  pointer-events: none;
 }
 
 .control-button:active,
@@ -430,11 +441,29 @@ button {
   box-shadow: inset 0 2px 5px rgba(34, 92, 4, 0.3);
 }
 
-.dpad-up { grid-column: 2; grid-row: 1; border-radius: 14px 14px 5px 5px; }
-.dpad-left { grid-column: 1; grid-row: 2; border-radius: 14px 5px 5px 14px; }
-.dpad-center { grid-column: 2; grid-row: 2; background: rgba(74, 164, 186, 0.18); }
-.dpad-right { grid-column: 3; grid-row: 2; border-radius: 5px 14px 14px 5px; }
-.dpad-down { grid-column: 2; grid-row: 3; border-radius: 5px 5px 14px 14px; }
+.dpad-up { top: 5px; left: 50%; transform: translateX(-50%); }
+.dpad-left { top: 50%; left: 5px; transform: translateY(-50%); }
+.dpad-right { top: 50%; right: 5px; transform: translateY(-50%); }
+.dpad-down { bottom: 5px; left: 50%; transform: translateX(-50%); }
+
+.dpad-center {
+  position: absolute;
+  z-index: 3;
+  top: calc(50% - 24px);
+  left: calc(50% - 24px);
+  width: 48px;
+  height: 48px;
+  border: 2px solid rgba(255,255,255,0.9);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,0.92), rgba(91,201,220,0.82) 52%, rgba(29,125,166,0.82));
+  box-shadow:
+    0 7px 15px rgba(22,91,122,0.28),
+    inset 0 2px 3px rgba(255,255,255,0.7);
+  pointer-events: none;
+  transition: transform 45ms linear;
+  will-change: transform;
+}
 
 .action-controls {
   display: flex;
@@ -459,6 +488,7 @@ button {
     inset 0 3px 4px rgba(255,255,255,0.68),
     inset 0 -5px 8px rgba(24, 98, 131, 0.18);
   transition: transform 100ms ease, filter 100ms ease;
+  opacity: 0.8;
 }
 
 .action-button span {
@@ -489,6 +519,7 @@ button {
 .action-button.active {
   transform: scale(0.9);
   filter: brightness(1.08);
+  opacity: 1;
 }
 
 .now-playing {
@@ -1021,8 +1052,8 @@ button {
   }
 
   #dpad {
-    width: 116px;
-    height: 86px;
+    width: 144px;
+    height: 144px;
   }
 
   .action-button {
@@ -1096,7 +1127,7 @@ button {
 
 @media (max-height: 570px) and (orientation: landscape) {
   #game-shell {
-    padding: 48px 112px 16px;
+    padding: 44px 74px 8px;
   }
 
   #hud {
@@ -1109,22 +1140,24 @@ button {
   }
 
   #touch-controls {
-    bottom: 8px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
   }
 
   #dpad {
-    width: 100px;
-    height: 76px;
+    width: 138px;
+    height: 138px;
   }
 
   .action-button {
-    width: 58px;
-    height: 58px;
+    width: 70px;
+    height: 70px;
   }
 
   .interact-button {
-    width: 52px;
-    height: 52px;
+    width: 64px;
+    height: 64px;
   }
 
   .now-playing {

@@ -176,7 +176,8 @@
     input.pressed.clear();
   });
 
-  document.querySelectorAll("[data-key]").forEach((button) => {
+  // Los botones A/B conservan pulsación independiente para permitir atacar al caminar.
+  document.querySelectorAll(".action-button[data-key]").forEach((button) => {
     const key = button.dataset.key;
 
     const start = (event) => {
@@ -197,6 +198,81 @@
     button.addEventListener("pointercancel", end);
     button.addEventListener("lostpointercapture", end);
     button.addEventListener("contextmenu", (event) => event.preventDefault());
+  });
+
+  // Joystick táctil: todo el círculo responde y permite movimiento diagonal.
+  const dpad = document.getElementById("dpad");
+  const joystickKnob = dpad.querySelector(".dpad-center");
+  const joystickButtons = [...dpad.querySelectorAll("[data-key]")];
+  const joystickKeys = new Set();
+  let joystickPointerId = null;
+
+  function releaseJoystickKeys() {
+    joystickKeys.forEach((key) => releaseKey(key));
+    joystickKeys.clear();
+    joystickButtons.forEach((button) => button.classList.remove("active"));
+  }
+
+  function applyJoystickDirection(event) {
+    const rect = dpad.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const rawX = event.clientX - centerX;
+    const rawY = event.clientY - centerY;
+    const radius = Math.max(1, Math.min(rect.width, rect.height) / 2);
+    const distance = Math.hypot(rawX, rawY);
+    const maxTravel = radius * 0.34;
+    const scale = distance > maxTravel ? maxTravel / distance : 1;
+    const visualX = rawX * scale;
+    const visualY = rawY * scale;
+    const deadZone = radius * 0.16;
+    const nextKeys = [];
+
+    if (rawY < -deadZone) nextKeys.push("ArrowUp");
+    if (rawY > deadZone) nextKeys.push("ArrowDown");
+    if (rawX < -deadZone) nextKeys.push("ArrowLeft");
+    if (rawX > deadZone) nextKeys.push("ArrowRight");
+
+    releaseJoystickKeys();
+    nextKeys.forEach((key) => {
+      pressKey(key);
+      joystickKeys.add(key);
+    });
+    joystickButtons.forEach((button) => {
+      button.classList.toggle("active", joystickKeys.has(button.dataset.key));
+    });
+    joystickKnob.style.transform = `translate(${visualX}px, ${visualY}px)`;
+  }
+
+  function endJoystick(event) {
+    if (joystickPointerId !== null && event.pointerId !== joystickPointerId) return;
+    event.preventDefault();
+    releaseJoystickKeys();
+    joystickKnob.style.transform = "translate(0, 0)";
+    dpad.classList.remove("joystick-active");
+    joystickPointerId = null;
+  }
+
+  dpad.addEventListener("pointerdown", (event) => {
+    if (joystickPointerId !== null) return;
+    event.preventDefault();
+    joystickPointerId = event.pointerId;
+    dpad.setPointerCapture?.(event.pointerId);
+    dpad.classList.add("joystick-active");
+    applyJoystickDirection(event);
+  });
+  dpad.addEventListener("pointermove", (event) => {
+    if (event.pointerId === joystickPointerId) applyJoystickDirection(event);
+  });
+  dpad.addEventListener("pointerup", endJoystick);
+  dpad.addEventListener("pointercancel", endJoystick);
+  dpad.addEventListener("lostpointercapture", endJoystick);
+  dpad.addEventListener("contextmenu", (event) => event.preventDefault());
+  window.addEventListener("blur", () => {
+    releaseJoystickKeys();
+    joystickKnob.style.transform = "translate(0, 0)";
+    dpad.classList.remove("joystick-active");
+    joystickPointerId = null;
   });
 
   function isDown(...keys) {
@@ -1108,7 +1184,7 @@
     }
 
     if (collidedBlock) {
-      if (!roomIsClear() || !tryPushBlock(collidedBlock, axis, amount)) return;
+      if (!tryPushBlock(collidedBlock, axis, amount)) return;
     }
 
     const collisionWithoutBlocks = game.activeObstacles.some((obstacle) => rectsOverlap(candidate, obstacle));
