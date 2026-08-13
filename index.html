@@ -2,11 +2,18 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="theme-color" content="#dffcff">
-  <meta name="description" content="DIAMA Dungeon — una aventura Y2K de CAPARROSO.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="DIAMA Dungeon — una aventura Y2K de Team DIAMA.">
   <title>DIAMA Dungeon — CDMX Quest</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260813-2">
 </head>
 <body>
   <div class="aero-background" aria-hidden="true">
@@ -52,6 +59,11 @@
       <div id="game-toast" role="status" aria-live="polite"></div>
     </section>
 
+    <div class="console-toolbar" aria-label="Controles de pantalla">
+      <span class="console-brand"><strong>DIAMA.</strong><small>GAMES</small></span>
+      <button id="fullscreen-button" type="button" aria-label="Usar pantalla completa">⛶ PANTALLA</button>
+    </div>
+
     <aside id="now-playing" class="glass-panel now-playing hidden" aria-live="polite">
       <button id="player-toggle" class="mini-disc" type="button" aria-label="Reproducir o pausar">▶</button>
       <div class="track-copy">
@@ -71,6 +83,7 @@
         <button id="track-forward" type="button" aria-label="Adelantar diez segundos">+10</button>
         <button id="track-next" type="button" aria-label="Siguiente disco">▶│</button>
       </div>
+      <button id="player-collapse" class="player-collapse" type="button" aria-label="Minimizar reproductor">⌄</button>
     </aside>
 
     <nav id="touch-controls" aria-label="Controles táctiles">
@@ -93,12 +106,6 @@
     </nav>
   </main>
 
-  <aside id="rotate-device" aria-label="Gira tu teléfono">
-    <div class="rotate-phone" aria-hidden="true">↻</div>
-    <strong>GIRA TU TELÉFONO</strong>
-    <span>DIAMA Dungeon se juega en horizontal</span>
-  </aside>
-
   <section id="start-modal" class="modal-layer">
     <div class="modal-window start-window">
       <div class="brand-orbit" aria-hidden="true">
@@ -106,6 +113,12 @@
       </div>
       <h1>DIAMA<br><span>DUNGEON</span></h1>
       <p class="modal-subtitle">SPECIAL EDITION · CDMX QUEST</p>
+
+      <div id="in-app-note" class="in-app-note hidden">
+        <strong>MODO INSTAGRAM ACTIVO</strong>
+        <span>Ya puedes jugar aquí. Para tener más espacio, abre este enlace en Safari o Chrome desde el menú ⋯.</span>
+        <button id="copy-link-button" type="button">COPIAR ENLACE</button>
+      </div>
 
       <div class="controls-card">
         <div>
@@ -116,7 +129,7 @@
         </div>
         <div>
           <strong>CELULAR</strong>
-          <span>D-Pad · Mover</span>
+          <span>Joystick · Mover</span>
           <span>A · Atacar</span>
           <span>B · Interactuar</span>
         </div>
@@ -151,12 +164,12 @@
 
   <section id="reveal-modal" class="modal-layer hidden">
     <div class="modal-window finale-window">
-      <p class="modal-kicker">DUNGEON CLEAR · POP-UP DESBLOQUEADO</p>
-      <h2>DIAMA × CENIZA<br>POP-UP CDMX</h2>
+      <p class="modal-kicker">DUNGEON CLEAR · EVENTO DESBLOQUEADO</p>
+      <h2>DIAMA<br>PENTHOUSE</h2>
       <div class="event-card">
-        <span>PARQUE MÉXICO · CIUDAD DE MÉXICO</span>
-        <strong>7 DE AGOSTO DE 2026</strong>
-        <span>DIAMA × CENIZA</span>
+        <span>CIUDAD DE MÉXICO</span>
+        <strong>22 DE AGOSTO DE 2026</strong>
+        <span>DIAMA PENTHOUSE</span>
       </div>
       <p id="final-disc-message">Discos encontrados: 0/3</p>
       <button id="play-again-button" class="primary-button" type="button">JUGAR DE NUEVO</button>
@@ -165,6 +178,7 @@
 
   <section id="credits-modal" class="modal-layer hidden">
     <div class="modal-window credits-window">
+      <button id="credits-x-button" class="modal-close-button" type="button" aria-label="Cerrar créditos">×</button>
       <p class="modal-kicker">8/8 FRAGMENTOS DIAMA · ARCHIVO COMPLETO</p>
       <h2>CRÉDITOS Y<br>AGRADECIMIENTOS</h2>
       <p class="credits-intro">Gracias por conectar todas las frecuencias de DIAMA Dungeon.</p>
@@ -213,6 +227,6 @@
   <audio id="ambience-a" preload="auto" src="assets/audio/dk-ambience.mp3"></audio>
   <audio id="ambience-b" preload="auto" src="assets/audio/dk-ambience.mp3"></audio>
 
-  <script src="game.js"></script>
+  <script src="game.js?v=20260813-2"></script>
 </body>
 </html>

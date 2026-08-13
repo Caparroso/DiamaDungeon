@@ -14,6 +14,10 @@
   const DOOR_SIZE = 74;
   const MAX_HP = 3;
 
+  // La primera versión exigía orientación horizontal. Si un navegador conserva
+  // aquel HTML en caché, eliminamos físicamente su pantalla de bloqueo.
+  document.getElementById("rotate-device")?.remove();
+
   const ui = {
     hearts: document.getElementById("hearts"),
     keyCount: document.getElementById("key-count"),
@@ -38,6 +42,7 @@
     playAgainButton: document.getElementById("play-again-button"),
     creditsModal: document.getElementById("credits-modal"),
     creditsCloseButton: document.getElementById("credits-close-button"),
+    creditsXButton: document.getElementById("credits-x-button"),
     nowPlaying: document.getElementById("now-playing"),
     playerToggle: document.getElementById("player-toggle"),
     trackPlay: document.getElementById("track-play"),
@@ -46,11 +51,75 @@
     trackPrevious: document.getElementById("track-previous"),
     trackNext: document.getElementById("track-next"),
     trackSeek: document.getElementById("track-seek"),
+    playerCollapse: document.getElementById("player-collapse"),
     trackTitle: document.getElementById("track-title"),
     trackStatus: document.getElementById("track-status"),
     trackCurrent: document.getElementById("track-current"),
-    trackDuration: document.getElementById("track-duration")
+    trackDuration: document.getElementById("track-duration"),
+    fullscreenButton: document.getElementById("fullscreen-button"),
+    inAppNote: document.getElementById("in-app-note"),
+    copyLinkButton: document.getElementById("copy-link-button")
   };
+
+  // Las barras de Safari y de los navegadores integrados cambian el área
+  // realmente visible. Usamos VisualViewport para mantener la consola completa.
+  const userAgent = navigator.userAgent || "";
+  const isInAppBrowser = /Instagram|FBAN|FBAV|MessengerForiOS/i.test(userAgent);
+  const isIPadDesktopMode = /Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1;
+  const isTouchDevice = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(userAgent)
+    || isIPadDesktopMode
+    || isInAppBrowser;
+
+  document.body.classList.toggle("in-app-browser", isInAppBrowser);
+  document.body.classList.toggle("touch-layout", isTouchDevice);
+  ui.inAppNote.classList.toggle("hidden", !isInAppBrowser);
+
+  function syncVisibleViewport() {
+    const viewport = window.visualViewport;
+    const width = Math.round(viewport?.width || window.innerWidth);
+    const height = Math.round(viewport?.height || window.innerHeight);
+    document.documentElement.style.setProperty("--app-width", `${width}px`);
+    document.documentElement.style.setProperty("--app-height", `${height}px`);
+    document.documentElement.style.setProperty("--app-top", `${Math.round(viewport?.offsetTop || 0)}px`);
+    document.body.classList.toggle("compact-landscape", width > height && height < 590);
+  }
+
+  syncVisibleViewport();
+  window.addEventListener("resize", syncVisibleViewport, { passive: true });
+  window.addEventListener("orientationchange", () => setTimeout(syncVisibleViewport, 120));
+  window.visualViewport?.addEventListener("resize", syncVisibleViewport, { passive: true });
+  window.visualViewport?.addEventListener("scroll", syncVisibleViewport, { passive: true });
+
+  ui.copyLinkButton.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+    } catch {
+      const temporary = document.createElement("textarea");
+      temporary.value = window.location.href;
+      temporary.setAttribute("readonly", "");
+      temporary.style.position = "fixed";
+      temporary.style.opacity = "0";
+      document.body.appendChild(temporary);
+      temporary.select();
+      document.execCommand("copy");
+      temporary.remove();
+    }
+    ui.copyLinkButton.textContent = "ENLACE COPIADO";
+  });
+
+  ui.fullscreenButton.addEventListener("click", async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen?.();
+      else if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+      } else {
+        throw new Error("fullscreen-unavailable");
+      }
+      setTimeout(syncVisibleViewport, 120);
+    } catch {
+      showToast("Usa ⋯ → Abrir en navegador para tener más espacio.", 3000);
+    }
+  });
 
   // Frecuencias ambientales: sólo animamos transform y opacidad para cuidar móviles.
   const signalField = document.getElementById("signal-field");
@@ -107,16 +176,31 @@
   function loadImage(name, path) {
     return new Promise((resolve) => {
       const image = new Image();
-      image.onload = () => {
-        images[name] = image;
-        resolve(true);
+      let settled = false;
+      const finish = (loaded) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        images[name] = loaded ? image : null;
+        resolve(loaded);
       };
-      image.onerror = () => {
-        images[name] = null;
-        resolve(false);
-      };
+      const timeout = setTimeout(() => finish(false), 6500);
+      image.onload = () => finish(true);
+      image.onerror = () => finish(false);
       image.src = path;
     });
+  }
+
+  let startUnlocked = false;
+
+  function unlockStart(compatibleMode = false) {
+    if (startUnlocked) return;
+    startUnlocked = true;
+    ui.startButton.disabled = false;
+    ui.startButtonText.textContent = "INICIAR JUEGO";
+    ui.loadStatus.textContent = compatibleMode
+      ? "DIAMA Games · modo compatible"
+      : "DIAMA Games";
   }
 
   async function preloadAssets() {
@@ -131,12 +215,12 @@
       ui.loadStatus.textContent = `Recursos ${completed}/${entries.length}`;
     }));
 
-    ui.startButton.disabled = false;
-    ui.startButtonText.textContent = "INICIAR JUEGO";
-    ui.loadStatus.textContent = failed
-      ? "DIAMA Games · modo compatible"
-      : "DIAMA Games";
+    unlockStart(failed > 0);
   }
+
+  // Algunos WebViews dejan solicitudes suspendidas. Los gráficos de respaldo
+  // permiten jugar aunque eso ocurra, así que la portada nunca queda bloqueada.
+  setTimeout(() => unlockStart(true), isInAppBrowser ? 2200 : 7200);
 
   // ---------------------------
   // Entrada: teclado y táctil
@@ -176,12 +260,13 @@
     input.pressed.clear();
   });
 
-  document.querySelectorAll("[data-key]").forEach((button) => {
+  // Los botones A/B conservan pulsación independiente para permitir atacar al caminar.
+  document.querySelectorAll(".action-button[data-key]").forEach((button) => {
     const key = button.dataset.key;
 
     const start = (event) => {
       event.preventDefault();
-      button.setPointerCapture?.(event.pointerId);
+      if (event.pointerId != null) button.setPointerCapture?.(event.pointerId);
       button.classList.add("active");
       pressKey(key);
     };
@@ -197,6 +282,145 @@
     button.addEventListener("pointercancel", end);
     button.addEventListener("lostpointercapture", end);
     button.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    if (!("PointerEvent" in window)) {
+      button.addEventListener("touchstart", start, { passive: false });
+      button.addEventListener("touchend", end, { passive: false });
+      button.addEventListener("touchcancel", end, { passive: false });
+    }
+  });
+
+  // Joystick táctil: todo el círculo responde y permite movimiento diagonal.
+  const dpad = document.getElementById("dpad");
+  const joystickKnob = dpad.querySelector(".dpad-center");
+  const joystickButtons = [...dpad.querySelectorAll("[data-key]")];
+  const joystickKeys = new Set();
+  const joystickVector = { x: 0, y: 0, active: false };
+  let joystickPointerId = null;
+
+  function releaseJoystickKeys() {
+    joystickKeys.forEach((key) => releaseKey(key));
+    joystickKeys.clear();
+    joystickButtons.forEach((button) => button.classList.remove("active"));
+    joystickVector.x = 0;
+    joystickVector.y = 0;
+    joystickVector.active = false;
+  }
+
+  function applyJoystickDirection(event) {
+    const rect = dpad.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const rawX = event.clientX - centerX;
+    const rawY = event.clientY - centerY;
+    const radius = Math.max(1, Math.min(rect.width, rect.height) / 2);
+    const distance = Math.hypot(rawX, rawY);
+    const maxTravel = radius * 0.34;
+    const scale = distance > maxTravel ? maxTravel / distance : 1;
+    const visualX = rawX * scale;
+    const visualY = rawY * scale;
+    const deadZone = radius * 0.18;
+    const nextKeys = new Set();
+
+    if (distance > deadZone) {
+      const absX = Math.abs(rawX);
+      const absY = Math.abs(rawY);
+      const diagonalThreshold = 0.72;
+      const inputStrength = Math.min(1, Math.max(0.32, (distance - deadZone) / (radius - deadZone)));
+
+      if (absX >= absY && absY / Math.max(1, absX) <= diagonalThreshold) {
+        joystickVector.x = Math.sign(rawX) * inputStrength;
+        joystickVector.y = 0;
+        nextKeys.add(rawX < 0 ? "ArrowLeft" : "ArrowRight");
+      } else if (absY > absX && absX / Math.max(1, absY) <= diagonalThreshold) {
+        joystickVector.x = 0;
+        joystickVector.y = Math.sign(rawY) * inputStrength;
+        nextKeys.add(rawY < 0 ? "ArrowUp" : "ArrowDown");
+      } else {
+        joystickVector.x = Math.sign(rawX) * Math.SQRT1_2 * inputStrength;
+        joystickVector.y = Math.sign(rawY) * Math.SQRT1_2 * inputStrength;
+        nextKeys.add(rawX < 0 ? "ArrowLeft" : "ArrowRight");
+        nextKeys.add(rawY < 0 ? "ArrowUp" : "ArrowDown");
+      }
+      joystickVector.active = true;
+    } else {
+      joystickVector.x = 0;
+      joystickVector.y = 0;
+      joystickVector.active = false;
+    }
+
+    joystickKeys.forEach((key) => {
+      if (!nextKeys.has(key)) releaseKey(key);
+    });
+    nextKeys.forEach((key) => {
+      if (!joystickKeys.has(key)) pressKey(key);
+    });
+    joystickKeys.clear();
+    nextKeys.forEach((key) => joystickKeys.add(key));
+    joystickButtons.forEach((button) => {
+      button.classList.toggle("active", joystickKeys.has(button.dataset.key));
+    });
+    joystickKnob.style.transform = `translate(${visualX}px, ${visualY}px)`;
+  }
+
+  function endJoystick(event) {
+    if (joystickPointerId !== null && event.pointerId !== joystickPointerId) return;
+    event.preventDefault();
+    releaseJoystickKeys();
+    joystickKnob.style.transform = "translate(0, 0)";
+    dpad.classList.remove("joystick-active");
+    joystickPointerId = null;
+  }
+
+  dpad.addEventListener("pointerdown", (event) => {
+    if (joystickPointerId !== null) return;
+    event.preventDefault();
+    joystickPointerId = event.pointerId;
+    dpad.setPointerCapture?.(event.pointerId);
+    dpad.classList.add("joystick-active");
+    applyJoystickDirection(event);
+  });
+  dpad.addEventListener("pointermove", (event) => {
+    if (event.pointerId === joystickPointerId) applyJoystickDirection(event);
+  });
+  dpad.addEventListener("pointerup", endJoystick);
+  dpad.addEventListener("pointercancel", endJoystick);
+  dpad.addEventListener("lostpointercapture", endJoystick);
+  dpad.addEventListener("contextmenu", (event) => event.preventDefault());
+
+  if (!("PointerEvent" in window)) {
+    let legacyTouchId = null;
+    const changedTouch = (event) => Array.from(event.changedTouches)
+      .find((touch) => touch.identifier === legacyTouchId) || event.changedTouches[0];
+    dpad.addEventListener("touchstart", (event) => {
+      if (legacyTouchId !== null) return;
+      event.preventDefault();
+      const touch = event.changedTouches[0];
+      legacyTouchId = touch.identifier;
+      dpad.classList.add("joystick-active");
+      applyJoystickDirection(touch);
+    }, { passive: false });
+    dpad.addEventListener("touchmove", (event) => {
+      if (legacyTouchId === null) return;
+      event.preventDefault();
+      applyJoystickDirection(changedTouch(event));
+    }, { passive: false });
+    const endLegacyTouch = (event) => {
+      if (legacyTouchId === null) return;
+      event.preventDefault();
+      releaseJoystickKeys();
+      joystickKnob.style.transform = "translate(0, 0)";
+      dpad.classList.remove("joystick-active");
+      legacyTouchId = null;
+    };
+    dpad.addEventListener("touchend", endLegacyTouch, { passive: false });
+    dpad.addEventListener("touchcancel", endLegacyTouch, { passive: false });
+  }
+  window.addEventListener("blur", () => {
+    releaseJoystickKeys();
+    joystickKnob.style.transform = "translate(0, 0)";
+    dpad.classList.remove("joystick-active");
+    joystickPointerId = null;
   });
 
   function isDown(...keys) {
@@ -258,8 +482,9 @@
     crossfadeTime: 0,
     crossfadeDuration: 0.32,
     baseVolume: 0.48,
-    duckVolume: 0
+    suspendedForDisc: false
   };
+  let pageAudioSuspended = document.hidden;
 
   Object.values(discs).forEach((disc) => {
     disc.audio.volume = 0.78;
@@ -279,6 +504,7 @@
     ambience.started = true;
     const active = ambience.tracks[ambience.activeIndex];
     active.currentTime = 0;
+    active.muted = false;
     active.volume = ambience.baseVolume;
     try {
       await active.play();
@@ -289,7 +515,17 @@
 
   function updateAmbience(dt) {
     if (!ambience.started) return;
-    const targetVolume = discMusicIsPlaying() ? ambience.duckVolume : ambience.baseVolume;
+
+    if (discMusicIsPlaying()) {
+      pauseAmbienceForDisc();
+      return;
+    }
+    if (ambience.suspendedForDisc) {
+      resumeAmbienceAfterDisc();
+      return;
+    }
+
+    const targetVolume = ambience.baseVolume;
     const active = ambience.tracks[ambience.activeIndex];
     const standbyIndex = 1 - ambience.activeIndex;
     const standby = ambience.tracks[standbyIndex];
@@ -356,26 +592,103 @@
     });
   }
 
-  function silenceAmbienceForDisc() {
+  function pauseAmbienceForDisc() {
+    if (!ambience.started) return;
+    if (ambience.crossfading
+      && ambience.crossfadeTime >= ambience.crossfadeDuration / 2) {
+      ambience.activeIndex = 1 - ambience.activeIndex;
+    }
+    ambience.crossfading = false;
+    ambience.crossfadeTime = 0;
+    ambience.suspendedForDisc = true;
     ambience.tracks.forEach((track) => {
+      track.muted = true;
       track.volume = 0;
+      track.pause();
     });
+  }
+
+  async function resumeAmbienceAfterDisc() {
+    if (pageAudioSuspended
+      || !ambience.started
+      || discMusicIsPlaying()
+      || !ambience.suspendedForDisc) return;
+    ambience.suspendedForDisc = false;
+    const active = ambience.tracks[ambience.activeIndex];
+    ambience.tracks.forEach((track, index) => {
+      track.muted = false;
+      track.volume = index === ambience.activeIndex ? ambience.baseVolume : 0;
+    });
+    try {
+      await active.play();
+    } catch {
+      ambience.suspendedForDisc = true;
+    }
+  }
+
+  function suspendAllAudioForPage() {
+    pageAudioSuspended = true;
+    clearTimeout(playerCollapseTimer);
+    Object.values(discs).forEach((disc) => disc.audio.pause());
+    if (!ambience.started) return;
+    ambience.suspendedForDisc = true;
+    ambience.crossfading = false;
+    ambience.crossfadeTime = 0;
+    ambience.tracks.forEach((track) => {
+      track.muted = true;
+      track.volume = 0;
+      track.pause();
+    });
+  }
+
+  function restorePageAudio() {
+    if (document.hidden) return;
+    pageAudioSuspended = false;
+    resumeAmbienceAfterDisc();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) suspendAllAudioForPage();
+    else restorePageAudio();
+  });
+  window.addEventListener("pagehide", suspendAllAudioForPage);
+  window.addEventListener("pageshow", restorePageAudio);
+
+  let playerCollapseTimer = null;
+  const compactPlayer = window.matchMedia("(max-width: 900px), (max-height: 570px)");
+
+  function setPlayerCollapsed(collapsed) {
+    ui.nowPlaying.classList.toggle("collapsed", collapsed);
+    ui.playerCollapse.textContent = collapsed ? "⌃" : "⌄";
+    ui.playerCollapse.setAttribute(
+      "aria-label",
+      collapsed ? "Abrir reproductor" : "Minimizar reproductor"
+    );
+  }
+
+  function schedulePlayerCollapse(delay = 4800) {
+    clearTimeout(playerCollapseTimer);
+    if (!compactPlayer.matches) return;
+    playerCollapseTimer = setTimeout(() => setPlayerCollapsed(true), delay);
   }
 
   async function playDisc(discId) {
     const disc = discs[discId];
     if (!disc) return;
 
+    pauseAmbienceForDisc();
     stopOtherTracks(disc.audio);
-    silenceAmbienceForDisc();
     music.currentDisc = disc;
     ui.nowPlaying.classList.remove("hidden");
+    setPlayerCollapsed(false);
+    schedulePlayerCollapse();
     ui.trackTitle.textContent = disc.title;
 
     try {
       await disc.audio.play();
       updatePlayerUi();
     } catch {
+      resumeAmbienceAfterDisc();
       showToast("El navegador bloqueó el audio. Pulsa ▶ para reproducir.");
       updatePlayerUi();
     }
@@ -427,9 +740,19 @@
   Object.values(discs).forEach((disc) => {
     disc.audio.addEventListener("timeupdate", updatePlayerUi);
     disc.audio.addEventListener("loadedmetadata", updatePlayerUi);
-    disc.audio.addEventListener("play", updatePlayerUi);
-    disc.audio.addEventListener("pause", updatePlayerUi);
-    disc.audio.addEventListener("ended", updatePlayerUi);
+    disc.audio.addEventListener("play", () => {
+      pauseAmbienceForDisc();
+      updatePlayerUi();
+    });
+    disc.audio.addEventListener("playing", pauseAmbienceForDisc);
+    disc.audio.addEventListener("pause", () => {
+      updatePlayerUi();
+      setTimeout(resumeAmbienceAfterDisc, 0);
+    });
+    disc.audio.addEventListener("ended", () => {
+      updatePlayerUi();
+      setTimeout(resumeAmbienceAfterDisc, 0);
+    });
   });
 
   ui.playerToggle.addEventListener("click", toggleCurrentTrack);
@@ -444,6 +767,21 @@
     if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
     audio.currentTime = (Number(ui.trackSeek.value) / 1000) * audio.duration;
     updatePlayerUi();
+  });
+  ui.playerCollapse.addEventListener("click", (event) => {
+    event.stopPropagation();
+    clearTimeout(playerCollapseTimer);
+    setPlayerCollapsed(!ui.nowPlaying.classList.contains("collapsed"));
+  });
+  ui.nowPlaying.addEventListener("click", (event) => {
+    if (!ui.nowPlaying.classList.contains("collapsed")) return;
+    if (event.target === ui.playerToggle || event.target === ui.playerCollapse) return;
+    setPlayerCollapsed(false);
+    schedulePlayerCollapse(7000);
+  });
+  ui.nowPlaying.addEventListener("pointerdown", () => clearTimeout(playerCollapseTimer));
+  ui.nowPlaying.addEventListener("pointerup", () => {
+    if (!ui.nowPlaying.classList.contains("collapsed")) schedulePlayerCollapse(7000);
   });
 
   function discoverDisc(disc) {
@@ -475,11 +813,14 @@
     game.modalPause = false;
   });
 
-  ui.creditsCloseButton.addEventListener("click", () => {
+  function closeCredits() {
     ui.creditsModal.classList.add("hidden");
     game.modalPause = false;
     showToast("Créditos desbloqueados · gracias por jugar.", 2600);
-  });
+  }
+
+  ui.creditsCloseButton.addEventListener("click", closeCredits);
+  ui.creditsXButton.addEventListener("click", closeCredits);
 
   // ---------------------------
   // Configuración del mapa
@@ -648,7 +989,7 @@
     12: {
       id: 12,
       name: "CUARTO 12 · TESORO",
-      subtitle: "DIAMA CDMX ARCHIVE",
+      subtitle: "DIAMA PENTHOUSE ARCHIVE",
       doors: { W: 11 },
       enemies: [],
       obstacles: []
@@ -1108,7 +1449,7 @@
     }
 
     if (collidedBlock) {
-      if (!roomIsClear() || !tryPushBlock(collidedBlock, axis, amount)) return;
+      if (!tryPushBlock(collidedBlock, axis, amount)) return;
     }
 
     const collisionWithoutBlocks = game.activeObstacles.some((obstacle) => rectsOverlap(candidate, obstacle));
@@ -1117,30 +1458,33 @@
   }
 
   function updatePlayerMovement(dt) {
-    if (player.attacking) {
-      player.moving = false;
-      return;
-    }
-
     let moveX = 0;
     let moveY = 0;
-    if (isDown("ArrowUp", "w")) moveY -= 1;
-    if (isDown("ArrowDown", "s")) moveY += 1;
-    if (isDown("ArrowLeft", "a")) moveX -= 1;
-    if (isDown("ArrowRight", "d")) moveX += 1;
+    if (joystickVector.active) {
+      moveX = joystickVector.x;
+      moveY = joystickVector.y;
+    } else {
+      if (isDown("ArrowUp", "w")) moveY -= 1;
+      if (isDown("ArrowDown", "s")) moveY += 1;
+      if (isDown("ArrowLeft", "a")) moveX -= 1;
+      if (isDown("ArrowRight", "d")) moveX += 1;
+    }
 
     const length = Math.hypot(moveX, moveY);
     player.moving = length > 0;
     if (!player.moving) return;
 
+    const inputStrength = Math.min(1, length);
     moveX /= length;
     moveY /= length;
 
     if (Math.abs(moveX) > Math.abs(moveY)) player.direction = moveX > 0 ? "right" : "left";
     else player.direction = moveY > 0 ? "down" : "up";
 
-    movePlayerAxis("x", moveX * player.speed * dt);
-    movePlayerAxis("y", moveY * player.speed * dt);
+    const attackMovement = player.attacking ? 0.72 : 1;
+    const movement = player.speed * inputStrength * attackMovement * dt;
+    movePlayerAxis("x", moveX * movement);
+    movePlayerAxis("y", moveY * movement);
   }
 
   // ---------------------------
@@ -1548,7 +1892,7 @@
     game.chest.opening = true;
     game.chest.frame = 0;
     game.chest.timer = 0;
-    showToast("Abriendo archivo CDMX…");
+    showToast("Abriendo archivo DIAMA Penthouse…");
     return true;
   }
 
@@ -2297,7 +2641,7 @@
     ctx.fillStyle = "#397789";
     ctx.font = "900 9px Trebuchet MS";
     ctx.textAlign = "center";
-    ctx.fillText(chest.open ? "ARCHIVO ABIERTO" : "CDMX ARCHIVE", chest.x + chest.w / 2, chest.y + 55);
+    ctx.fillText(chest.open ? "ARCHIVO ABIERTO" : "DIAMA ARCHIVE", chest.x + chest.w / 2, chest.y + 55);
   }
 
   // ---------------------------
