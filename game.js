@@ -430,7 +430,7 @@
       room: 3.5,
       x: 320,
       y: 170,
-      audio: document.getElementById("audio-ready")
+      src: "assets/audio/ready.mp3?v=20260813-7"
     },
     phantoms: {
       id: "phantoms",
@@ -439,7 +439,7 @@
       room: 7,
       x: 520,
       y: 83,
-      audio: document.getElementById("audio-phantoms")
+      src: "assets/audio/phantoms.mp3?v=20260813-7"
     },
     dk: {
       id: "dk",
@@ -448,14 +448,16 @@
       room: 11,
       x: 520,
       y: 238,
-      audio: document.getElementById("audio-dk")
+      src: "assets/audio/dk-y2k.mp3?v=20260813-7"
     }
   };
 
   const music = {
+    player: document.getElementById("disc-player"),
     currentDisc: null,
     collected: new Set(),
-    modalDisc: null
+    modalDisc: null,
+    playRequest: 0
   };
 
   const ambience = {
@@ -473,9 +475,7 @@
   };
   let pageAudioSuspended = document.hidden;
 
-  Object.values(discs).forEach((disc) => {
-    disc.audio.volume = 0.78;
-  });
+  music.player.volume = 0.78;
 
   ambience.tracks.forEach((track) => {
     track.loop = true; // Respaldo si un navegador bloquea el segundo reproductor.
@@ -483,7 +483,7 @@
   });
 
   function discMusicIsPlaying() {
-    return Object.values(discs).some((disc) => !disc.audio.paused);
+    return Boolean(music.currentDisc && !music.player.paused);
   }
 
   async function startAmbience() {
@@ -573,12 +573,6 @@
     return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
   }
 
-  function stopOtherTracks(exceptAudio) {
-    Object.values(discs).forEach((disc) => {
-      if (disc.audio !== exceptAudio) disc.audio.pause();
-    });
-  }
-
   function pauseAmbienceForDisc() {
     if (!ambience.started) return;
     if (ambience.crossfading
@@ -616,7 +610,7 @@
   function suspendAllAudioForPage() {
     pageAudioSuspended = true;
     clearTimeout(playerCollapseTimer);
-    Object.values(discs).forEach((disc) => disc.audio.pause());
+    music.player.pause();
     if (!ambience.started) return;
     ambience.suspendedForDisc = true;
     ambience.crossfading = false;
@@ -663,8 +657,14 @@
     const disc = discs[discId];
     if (!disc) return;
 
+    const request = ++music.playRequest;
     pauseAmbienceForDisc();
-    stopOtherTracks(disc.audio);
+    const switchedDisc = music.currentDisc?.id !== disc.id;
+    if (switchedDisc) {
+      music.player.pause();
+      music.player.src = disc.src;
+      music.player.load();
+    }
     music.currentDisc = disc;
     ui.nowPlaying.classList.remove("hidden");
     setPlayerCollapsed(false);
@@ -672,9 +672,13 @@
     ui.trackTitle.textContent = disc.title;
 
     try {
-      await disc.audio.play();
+      music.player.muted = false;
+      music.player.volume = 0.78;
+      await music.player.play();
+      if (request !== music.playRequest) return;
       updatePlayerUi();
     } catch {
+      if (request !== music.playRequest) return;
       resumeAmbienceAfterDisc();
       showToast("El navegador bloqueó el audio. Pulsa ▶ para reproducir.");
       updatePlayerUi();
@@ -683,7 +687,7 @@
 
   function toggleCurrentTrack() {
     if (!music.currentDisc) return;
-    const audio = music.currentDisc.audio;
+    const audio = music.player;
     if (audio.paused) {
       playDisc(music.currentDisc.id);
     } else {
@@ -694,7 +698,7 @@
 
   function seekCurrentTrack(seconds) {
     if (!music.currentDisc) return;
-    const audio = music.currentDisc.audio;
+    const audio = music.player;
     const target = Math.max(0, audio.currentTime + seconds);
     audio.currentTime = Number.isFinite(audio.duration) ? Math.min(audio.duration, target) : target;
     updatePlayerUi();
@@ -710,7 +714,7 @@
 
   function updatePlayerUi() {
     if (!music.currentDisc) return;
-    const audio = music.currentDisc.audio;
+    const audio = music.player;
     ui.playerToggle.textContent = audio.paused ? "▶" : "Ⅱ";
     ui.trackStatus.textContent = audio.paused ? "En pausa" : "Reproduciendo";
     ui.trackCurrent.textContent = formatTime(audio.currentTime);
@@ -724,22 +728,20 @@
     ui.trackPlay.textContent = audio.paused ? "▶" : "Ⅱ";
   }
 
-  Object.values(discs).forEach((disc) => {
-    disc.audio.addEventListener("timeupdate", updatePlayerUi);
-    disc.audio.addEventListener("loadedmetadata", updatePlayerUi);
-    disc.audio.addEventListener("play", () => {
-      pauseAmbienceForDisc();
-      updatePlayerUi();
-    });
-    disc.audio.addEventListener("playing", pauseAmbienceForDisc);
-    disc.audio.addEventListener("pause", () => {
-      updatePlayerUi();
-      setTimeout(resumeAmbienceAfterDisc, 0);
-    });
-    disc.audio.addEventListener("ended", () => {
-      updatePlayerUi();
-      setTimeout(resumeAmbienceAfterDisc, 0);
-    });
+  music.player.addEventListener("timeupdate", updatePlayerUi);
+  music.player.addEventListener("loadedmetadata", updatePlayerUi);
+  music.player.addEventListener("play", () => {
+    pauseAmbienceForDisc();
+    updatePlayerUi();
+  });
+  music.player.addEventListener("playing", pauseAmbienceForDisc);
+  music.player.addEventListener("pause", () => {
+    updatePlayerUi();
+    setTimeout(resumeAmbienceAfterDisc, 0);
+  });
+  music.player.addEventListener("ended", () => {
+    updatePlayerUi();
+    setTimeout(resumeAmbienceAfterDisc, 0);
   });
 
   ui.playerToggle.addEventListener("click", toggleCurrentTrack);
@@ -750,7 +752,7 @@
   ui.trackNext.addEventListener("click", () => selectCollectedDisc(1));
   ui.trackSeek.addEventListener("input", () => {
     if (!music.currentDisc) return;
-    const audio = music.currentDisc.audio;
+    const audio = music.player;
     if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
     audio.currentTime = (Number(ui.trackSeek.value) / 1000) * audio.duration;
     updatePlayerUi();

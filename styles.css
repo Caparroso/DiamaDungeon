@@ -1029,6 +1029,14 @@ button {
   letter-spacing: 1.5px;
 }
 
+.reveal-presenter {
+  margin: 5px 0 2px;
+  color: #56818d;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
 .finale-window {
   background:
     linear-gradient(155deg, rgba(255,255,255,0.96), rgba(224,255,244,0.88) 48%, rgba(166,235,116,0.7));
