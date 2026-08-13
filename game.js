@@ -56,7 +56,6 @@
     trackStatus: document.getElementById("track-status"),
     trackCurrent: document.getElementById("track-current"),
     trackDuration: document.getElementById("track-duration"),
-    fullscreenButton: document.getElementById("fullscreen-button"),
     inAppNote: document.getElementById("in-app-note"),
     copyLinkButton: document.getElementById("copy-link-button")
   };
@@ -81,6 +80,8 @@
     document.documentElement.style.setProperty("--app-width", `${width}px`);
     document.documentElement.style.setProperty("--app-height", `${height}px`);
     document.documentElement.style.setProperty("--app-top", `${Math.round(viewport?.offsetTop || 0)}px`);
+    document.body.classList.toggle("portrait-layout", width <= height);
+    document.body.classList.toggle("tablet-layout", isTouchDevice && width >= 600);
     document.body.classList.toggle("compact-landscape", width > height && height < 590);
   }
 
@@ -105,20 +106,6 @@
       temporary.remove();
     }
     ui.copyLinkButton.textContent = "ENLACE COPIADO";
-  });
-
-  ui.fullscreenButton.addEventListener("click", async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen?.();
-      else if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen({ navigationUI: "hide" });
-      } else {
-        throw new Error("fullscreen-unavailable");
-      }
-      setTimeout(syncVisibleViewport, 120);
-    } catch {
-      showToast("Usa ⋯ → Abrir en navegador para tener más espacio.", 3000);
-    }
   });
 
   // Frecuencias ambientales: sólo animamos transform y opacidad para cuidar móviles.

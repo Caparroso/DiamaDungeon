@@ -89,6 +89,8 @@ portátil: monitor 16:9 arriba y controles abajo. No obliga a girar el equipo,
 por lo que también funciona dentro del navegador de Instagram. En horizontal,
 el monitor conserva su proporción y deja los controles táctiles a los lados.
 La interfaz toma el tamaño del área realmente visible para no quedar debajo de
-las barras de Safari o Instagram. El botón **Pantalla** solicita pantalla
-completa cuando el navegador lo permite. Si Instagram limita esa función, la
-portada muestra instrucciones y un botón para copiar el enlace.
+las barras de Safari o Instagram. Si el navegador integrado deja poco espacio,
+la portada muestra instrucciones y un botón para copiar el enlace.
+En vertical no se añade una carcasa sólida: el fondo continúa con una segunda
+capa del arte DIAMA fundida sobre la primera y los controles flotan en la zona
+inferior sin cubrir el monitor.

@@ -1696,7 +1696,12 @@ body.touch-layout .modal-window {
   }
 
   body.touch-layout #screen-frame {
-    width: min(62vw, calc((var(--app-height) - 76px) * 1.7778), 780px);
+    width: min(
+      60vw,
+      calc(var(--app-width) - 260px),
+      calc((var(--app-height) - 76px) * 1.7778),
+      780px
+    );
     max-height: calc(var(--app-height) - 76px);
     border-radius: 16px 16px 20px 20px;
   }
@@ -1760,7 +1765,9 @@ body.touch-layout .modal-window {
 
   body.touch-layout #game-shell::before {
     inset: auto 6px 7px;
-    height: clamp(176px, 26vw, 220px);
+    width: auto;
+    height: 176px;
+    transform: none;
     border-radius: 34px 34px 44px 44px;
     background:
       radial-gradient(circle at 50% 15%, rgba(255,255,255,0.62), transparent 40%),
@@ -1778,37 +1785,41 @@ body.touch-layout .modal-window {
   }
 
   body.touch-layout #dpad {
-    left: max(13px, env(safe-area-inset-left));
-    bottom: max(15px, env(safe-area-inset-bottom));
-    width: clamp(132px, 29vw, 188px);
-    height: clamp(132px, 29vw, 188px);
+    top: auto;
+    left: 13px;
+    left: calc(13px + env(safe-area-inset-left, 0px));
+    bottom: 15px;
+    bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+    width: 132px;
+    height: 132px;
   }
 
   body.touch-layout .action-controls {
-    right: max(13px, env(safe-area-inset-right));
-    bottom: max(25px, calc(env(safe-area-inset-bottom) + 10px));
+    top: auto;
+    right: 13px;
+    right: calc(13px + env(safe-area-inset-right, 0px));
+    bottom: 25px;
+    bottom: calc(25px + env(safe-area-inset-bottom, 0px));
     gap: 10px;
   }
 
   body.touch-layout .action-button {
-    width: clamp(64px, 14vw, 86px);
-    height: clamp(64px, 14vw, 86px);
+    width: 64px;
+    height: 64px;
   }
 
   body.touch-layout .interact-button {
-    width: clamp(58px, 13vw, 78px);
-    height: clamp(58px, 13vw, 78px);
+    width: 58px;
+    height: 58px;
   }
 
   body.touch-layout .console-toolbar {
-    bottom: max(57px, calc(env(safe-area-inset-bottom) + 45px));
+    top: auto;
+    bottom: 57px;
+    bottom: calc(57px + env(safe-area-inset-bottom, 0px));
     flex-direction: column;
     gap: 4px;
-  }
-
-  body.touch-layout .console-toolbar button {
-    padding: 4px 7px;
-    font-size: 6px;
+    pointer-events: none;
   }
 
   body.touch-layout .now-playing,
@@ -1826,6 +1837,32 @@ body.touch-layout .modal-window {
 
   body.touch-layout .credits-list {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (orientation: portrait) and (min-width: 600px) {
+  body.touch-layout #game-shell::before {
+    height: 220px;
+  }
+
+  body.touch-layout #dpad {
+    width: 188px;
+    height: 188px;
+  }
+
+  body.touch-layout .action-button {
+    width: 86px;
+    height: 86px;
+  }
+
+  body.touch-layout .interact-button {
+    width: 78px;
+    height: 78px;
+  }
+
+  body.touch-layout .console-toolbar {
+    bottom: 78px;
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -1901,6 +1938,163 @@ body.touch-layout.compact-landscape .in-app-note span {
 body.touch-layout.compact-landscape .in-app-note button {
   padding: 5px 8px;
   font-size: 7px;
+}
+
+/* ============================================================
+   Composición vertical final. Usa el viewport real en vez del
+   reporte de orientación de Safari, WhatsApp o Instagram.
+   ============================================================ */
+
+body.touch-layout.portrait-layout .aero-background {
+  background:
+    linear-gradient(180deg, rgba(244,255,255,0.04), rgba(65,210,237,0.12)),
+    url("assets/images/diamad.webp") 42% center / cover no-repeat;
+}
+
+body.touch-layout.portrait-layout .aero-background::before {
+  display: block;
+  inset: auto 0 0;
+  width: 100%;
+  height: 54%;
+  opacity: 0.78;
+  background: url("assets/images/diamad.webp") 82% center / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.18) 13%, #000 38%);
+  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.18) 13%, #000 38%);
+}
+
+body.touch-layout.portrait-layout .aero-background::after {
+  background:
+    linear-gradient(180deg, rgba(229,252,255,0.08), transparent 52%),
+    radial-gradient(circle at 50% 76%, rgba(209,252,255,0.12), transparent 55%);
+  backdrop-filter: none;
+}
+
+body.touch-layout.portrait-layout #game-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 10px 190px;
+}
+
+body.touch-layout.portrait-layout #game-shell::before {
+  display: none !important;
+}
+
+body.touch-layout.portrait-layout #screen-frame {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: min(94vw, calc((var(--app-height) - 270px) * 1.7778), 720px);
+  max-height: calc(var(--app-height) - 270px);
+  transform: none;
+}
+
+body.touch-layout.portrait-layout #dpad {
+  top: auto;
+  left: 16px;
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  bottom: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: 132px;
+  height: 132px;
+  transform: none;
+}
+
+body.touch-layout.portrait-layout #dpad.joystick-active {
+  transform: scale(1.025);
+}
+
+body.touch-layout.portrait-layout .action-controls {
+  top: auto;
+  right: 16px;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: 27px;
+  bottom: calc(27px + env(safe-area-inset-bottom, 0px));
+  gap: 10px;
+  transform: none;
+}
+
+body.touch-layout.portrait-layout .action-button {
+  width: 64px;
+  height: 64px;
+}
+
+body.touch-layout.portrait-layout .interact-button {
+  width: 58px;
+  height: 58px;
+  transform: translateY(16px);
+}
+
+body.touch-layout.portrait-layout .interact-button:active,
+body.touch-layout.portrait-layout .interact-button.active {
+  transform: translateY(16px) scale(0.92);
+}
+
+body.touch-layout.portrait-layout .console-toolbar {
+  top: auto;
+  bottom: 65px;
+  bottom: calc(65px + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+body.touch-layout.portrait-layout .console-brand strong {
+  font-size: 19px;
+}
+
+body.touch-layout.portrait-layout .console-brand small {
+  font-size: 6px;
+}
+
+body.touch-layout.portrait-layout .now-playing,
+body.touch-layout.portrait-layout .now-playing.collapsed {
+  top: auto;
+  bottom: 151px;
+  bottom: calc(151px + env(safe-area-inset-bottom, 0px));
+}
+
+body.touch-layout.portrait-layout.tablet-layout #game-shell {
+  padding-bottom: 252px;
+}
+
+body.touch-layout.portrait-layout.tablet-layout #screen-frame {
+  width: min(92vw, calc((var(--app-height) - 330px) * 1.7778), 720px);
+  max-height: calc(var(--app-height) - 330px);
+}
+
+body.touch-layout.portrait-layout.tablet-layout #dpad {
+  width: 188px;
+  height: 188px;
+  left: 28px;
+  left: calc(28px + env(safe-area-inset-left, 0px));
+}
+
+body.touch-layout.portrait-layout.tablet-layout .action-controls {
+  right: 28px;
+  right: calc(28px + env(safe-area-inset-right, 0px));
+  bottom: 40px;
+  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  gap: 18px;
+}
+
+body.touch-layout.portrait-layout.tablet-layout .action-button {
+  width: 86px;
+  height: 86px;
+}
+
+body.touch-layout.portrait-layout.tablet-layout .interact-button {
+  width: 78px;
+  height: 78px;
+}
+
+body.touch-layout.portrait-layout.tablet-layout .console-toolbar {
+  bottom: 88px;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+}
+
+body.touch-layout.portrait-layout.tablet-layout .now-playing,
+body.touch-layout.portrait-layout.tablet-layout .now-playing.collapsed {
+  bottom: 213px;
+  bottom: calc(213px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (prefers-reduced-motion: reduce) {
