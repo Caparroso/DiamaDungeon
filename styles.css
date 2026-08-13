@@ -55,15 +55,6 @@ button {
     url("assets/images/diamad.webp") center / cover no-repeat;
 }
 
-.aero-background::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  display: none;
-  background: url("assets/images/diamad.webp") center / contain no-repeat;
-  pointer-events: none;
-}
-
 .aero-background::after {
   content: "";
   position: absolute;
@@ -411,36 +402,25 @@ button {
 }
 
 #dpad {
-  position: relative;
-  width: 148px;
-  height: 148px;
-  display: block;
-  padding: 7px;
-  overflow: visible;
-  border-radius: 50%;
-  opacity: 0.88;
+  width: 132px;
+  height: 94px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 5px;
+  border-radius: 26px;
   pointer-events: auto;
-  touch-action: none;
-  transition: opacity 120ms ease, transform 120ms ease;
-}
-
-#dpad.joystick-active {
-  opacity: 1;
-  transform: scale(1.025);
 }
 
 .control-button {
-  position: absolute;
+  position: relative;
   z-index: 2;
-  width: 42px;
-  height: 42px;
   border: 0;
-  border-radius: 50%;
   color: #35758a;
-  background: rgba(255,255,255,0.26);
-  font-size: 17px;
+  background: rgba(255,255,255,0.44);
+  font-size: 14px;
   font-weight: 900;
-  pointer-events: none;
+  cursor: pointer;
 }
 
 .control-button:active,
@@ -450,29 +430,11 @@ button {
   box-shadow: inset 0 2px 5px rgba(34, 92, 4, 0.3);
 }
 
-.dpad-up { top: 5px; left: 50%; transform: translateX(-50%); }
-.dpad-left { top: 50%; left: 5px; transform: translateY(-50%); }
-.dpad-right { top: 50%; right: 5px; transform: translateY(-50%); }
-.dpad-down { bottom: 5px; left: 50%; transform: translateX(-50%); }
-
-.dpad-center {
-  position: absolute;
-  z-index: 3;
-  top: calc(50% - 24px);
-  left: calc(50% - 24px);
-  width: 48px;
-  height: 48px;
-  border: 2px solid rgba(255,255,255,0.9);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 35% 28%, rgba(255,255,255,0.92), rgba(91,201,220,0.82) 52%, rgba(29,125,166,0.82));
-  box-shadow:
-    0 7px 15px rgba(22,91,122,0.28),
-    inset 0 2px 3px rgba(255,255,255,0.7);
-  pointer-events: none;
-  transition: transform 45ms linear;
-  will-change: transform;
-}
+.dpad-up { grid-column: 2; grid-row: 1; border-radius: 14px 14px 5px 5px; }
+.dpad-left { grid-column: 1; grid-row: 2; border-radius: 14px 5px 5px 14px; }
+.dpad-center { grid-column: 2; grid-row: 2; background: rgba(74, 164, 186, 0.18); }
+.dpad-right { grid-column: 3; grid-row: 2; border-radius: 5px 14px 14px 5px; }
+.dpad-down { grid-column: 2; grid-row: 3; border-radius: 5px 5px 14px 14px; }
 
 .action-controls {
   display: flex;
@@ -497,7 +459,6 @@ button {
     inset 0 3px 4px rgba(255,255,255,0.68),
     inset 0 -5px 8px rgba(24, 98, 131, 0.18);
   transition: transform 100ms ease, filter 100ms ease;
-  opacity: 0.8;
 }
 
 .action-button span {
@@ -528,7 +489,6 @@ button {
 .action-button.active {
   transform: scale(0.9);
   filter: brightness(1.08);
-  opacity: 1;
 }
 
 .now-playing {
@@ -538,7 +498,7 @@ button {
   bottom: 22px;
   width: min(560px, 60vw);
   min-height: 64px;
-  padding: 8px 40px 8px 8px;
+  padding: 8px 14px 8px 8px;
   display: grid;
   grid-template-columns: 48px minmax(120px, 1fr) minmax(150px, 0.9fr);
   grid-template-rows: auto auto;
@@ -546,68 +506,6 @@ button {
   gap: 5px 10px;
   border-radius: 22px;
   transform: translateX(-50%);
-  transition:
-    width 180ms ease,
-    min-height 180ms ease,
-    padding 180ms ease,
-    border-radius 180ms ease;
-}
-
-.player-collapse {
-  position: absolute;
-  z-index: 4;
-  top: 7px;
-  right: 8px;
-  width: 27px;
-  height: 27px;
-  border: 1px solid rgba(255,255,255,0.95);
-  border-radius: 50%;
-  color: #286c81;
-  background: rgba(255,255,255,0.7);
-  box-shadow: inset 0 1px white, 0 2px 7px rgba(27,102,129,0.16);
-  font-size: 16px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.now-playing.collapsed {
-  width: min(250px, 58vw);
-  min-height: 48px;
-  padding: 5px 38px 5px 5px;
-  grid-template-columns: 38px minmax(0, 1fr);
-  grid-template-rows: 38px;
-  gap: 7px;
-  border-radius: 17px;
-}
-
-.now-playing.collapsed .mini-disc {
-  width: 38px;
-  height: 38px;
-  grid-row: 1;
-}
-
-.now-playing.collapsed .track-copy {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.now-playing.collapsed .track-time,
-.now-playing.collapsed .player-controls,
-.now-playing.collapsed #track-status {
-  display: none;
-}
-
-.now-playing.collapsed .track-eyebrow {
-  font-size: 7px;
-}
-
-.now-playing.collapsed .track-copy strong {
-  font-size: 10px;
-}
-
-.now-playing.collapsed .player-collapse {
-  top: 50%;
-  transform: translateY(-50%);
 }
 
 .mini-disc {
@@ -781,23 +679,6 @@ button {
 .modal-window > * {
   position: relative;
   z-index: 2;
-}
-
-.modal-close-button {
-  position: absolute;
-  z-index: 12;
-  top: 10px;
-  right: 10px;
-  width: 34px;
-  height: 34px;
-  border: 1px solid rgba(255,255,255,0.96);
-  border-radius: 50%;
-  color: #286a7e;
-  background: rgba(255,255,255,0.86);
-  box-shadow: inset 0 1px white, 0 4px 12px rgba(25,101,130,0.18);
-  font-size: 23px;
-  line-height: 1;
-  cursor: pointer;
 }
 
 .brand-orbit {
@@ -1140,8 +1021,8 @@ button {
   }
 
   #dpad {
-    width: 144px;
-    height: 144px;
+    width: 116px;
+    height: 86px;
   }
 
   .action-button {
@@ -1158,13 +1039,6 @@ button {
     bottom: 111px;
     width: min(94vw, 520px);
     grid-template-columns: 42px 1fr;
-  }
-
-  .now-playing.collapsed {
-    top: 8px;
-    bottom: auto;
-    width: min(240px, 58vw);
-    grid-template-columns: 38px minmax(0, 1fr);
   }
 
   .track-time {
@@ -1191,10 +1065,6 @@ button {
 }
 
 @media (max-width: 900px) {
-  .aero-background::before {
-    display: block;
-  }
-
   .aero-background::after,
   .glass-pill,
   .glass-panel,
@@ -1226,66 +1096,35 @@ button {
 
 @media (max-height: 570px) and (orientation: landscape) {
   #game-shell {
-    padding: 42px 4px 6px;
-  }
-
-  #screen-frame {
-    width: min(60vw, 760px);
+    padding: 48px 112px 16px;
   }
 
   #hud {
-    top: 4px;
-    left: 8px;
-    right: 8px;
+    top: 5px;
   }
 
   .glass-pill {
-    min-height: 31px;
-    padding: 3px 7px;
-  }
-
-  .hud-cluster {
-    gap: 4px;
-  }
-
-  .hud-label,
-  .room-kicker {
-    font-size: 6px;
-    letter-spacing: 0.8px;
-  }
-
-  .hud-value {
-    font-size: 10px;
-  }
-
-  .room-pill {
-    min-width: 116px;
-  }
-
-  #zone-title {
-    max-width: 135px;
-    font-size: 8px;
+    min-height: 36px;
+    padding: 4px 9px;
   }
 
   #touch-controls {
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
+    bottom: 8px;
   }
 
   #dpad {
-    width: 138px;
-    height: 138px;
+    width: 100px;
+    height: 76px;
   }
 
   .action-button {
-    width: 61px;
-    height: 61px;
+    width: 58px;
+    height: 58px;
   }
 
   .interact-button {
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
   }
 
   .now-playing {
@@ -1295,81 +1134,25 @@ button {
     padding-block: 5px;
   }
 
-  .now-playing.collapsed {
-    top: 7px;
-    bottom: auto;
-    width: min(235px, 42vw);
-    min-height: 48px;
-    padding: 5px 38px 5px 5px;
-  }
-
   .start-window {
     transform: scale(0.78);
   }
 
   .credits-window {
-    width: min(760px, 96vw);
-    max-height: calc(100dvh - 10px);
-    padding: 10px 14px;
-    overflow-y: auto;
-    border-radius: 22px 22px 28px 28px;
-  }
-
-  .credits-window .modal-kicker {
-    margin-bottom: 2px;
-    font-size: 7px;
-  }
-
-  .credits-window h2 {
-    margin-bottom: 3px;
-    font-size: 18px;
-    line-height: 0.95;
-  }
-
-  .credits-intro,
-  .credits-signoff {
-    display: none;
+    width: min(720px, 80vw);
+    max-height: 94dvh;
+    padding: 18px 24px;
   }
 
   .credits-list {
-    max-height: none;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
-    margin: 5px 0 6px;
-    padding: 3px;
-    overflow: visible;
+    max-height: 48dvh;
+    grid-template-columns: 1fr 1fr;
+    margin: 8px 0;
   }
 
   .credits-list article {
-    min-height: 58px;
-    padding: 5px 6px;
-    border-radius: 10px;
-  }
-
-  .credits-list strong {
-    font-size: 8px;
-  }
-
-  .credits-list span {
-    font-size: 6.5px;
-    line-height: 1.18;
-  }
-
-  .credits-window .primary-button {
-    min-height: 30px;
-    margin-top: 0;
-    padding: 6px 16px;
-    font-size: 9px;
-  }
-
-  .credits-window .modal-close-button {
-    position: sticky;
-    top: 0;
-    float: right;
-    width: 30px;
-    height: 30px;
-    margin: 0 0 -30px;
-    font-size: 20px;
+    min-height: 54px;
+    padding: 7px 10px;
   }
 }
 

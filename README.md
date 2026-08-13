@@ -29,8 +29,7 @@ No cambies las mayúsculas o rutas dentro de `assets/` sin actualizar
 - WASD o flechas: mover.
 - Espacio o Z: atacar.
 - E o X: interactuar.
-- En celular: joystick táctil, A y B. Apoya el dedo en cualquier parte del
-  joystick y arrástralo; también acepta diagonales.
+- En celular: D-Pad, A y B.
 
 ## Música
 
@@ -41,9 +40,7 @@ No cambies las mayúsculas o rutas dentro de `assets/` sin actualizar
 Los tres discos se encuentran dentro del recorrido principal y la colección
 queda guardada en el navegador. El reproductor permite reproducir, pausar,
 adelantar o retroceder diez segundos, mover la línea de tiempo y cambiar entre
-los discos ya encontrados. En celular, el reproductor se minimiza
-automáticamente a una pestaña pequeña en la parte superior y puede abrirse o
-cerrarse manualmente.
+los discos ya encontrados.
 
 ## Fragmentos y créditos
 
@@ -59,7 +56,6 @@ fragmentos, las cápsulas de energía y el cofre tienen colisión física.
 - El jugador tiene tres puntos de energía.
 - La espada tiene alcance amplio y golpea durante toda su animación.
 - Los enemigos detectan al jugador a menor distancia.
-- Los núcleos del cuarto 2 pueden empujarse incluso si aún quedan enemigos.
 - Hay cuatro cápsulas de corazón que restauran un punto.
 - Morir conserva llaves, discos, enemigos derrotados y puzles completados.
 - **Continuar** reaparece al jugador al inicio del cuarto actual.
@@ -69,10 +65,7 @@ fragmentos, las cápsulas de energía y el cofre tienen colisión física.
 `CAPARROSO — DkAmbience (DiamaDungeon)` se reproduce durante todo el recorrido
 con un fundido cruzado muy breve al reiniciarse. Cuando suena un DIAMA Disc, el
 ambiente se silencia por completo; al pausar o terminar la canción, regresa
-a su nivel normal. Para asegurar este comportamiento en Safari móvil, el audio
-ambiental se pausa físicamente mientras se reproduce cualquier disco.
-Al cambiar de pestaña, bloquear el teléfono o salir de Safari, todos los audios
-se detienen para impedir reproducción en segundo plano.
+gradualmente a su nivel normal.
 
 El exterior del monitor incluye frecuencias y señales DIAMA animadas. En
 teléfonos se usa una cantidad reducida para conservar el rendimiento.
